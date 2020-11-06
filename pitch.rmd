@@ -1,0 +1,140 @@
+---
+title: "Application Prez"
+author: "Vrinnda Gupta"
+date: "11/6/2020"
+output: slidy_presentation
+---
+
+## PITCH
+So here, my application for this assessment fullfills a certain function. 
+It can be found here: https://vrinndagupta.shinyapps.io/DDPW4/
+The code for the same can be found in the next slides 
+This graph plots GDP of a continent with life expectancy.
+
+## Data Set
+I have used the "gapminder" dataset for the same
+
+{r}
+library(plotly)
+library(gapminder)
+data<- gapminder
+head(data)
+
+You can see the columns that are used for this plot
+
+## UI Code
+
+
+library(plotly)
+library(colourpicker)
+library(ggplot2)
+library(gapminder)
+library(shinycustomloader)
+library(DT)
+
+ui <- fluidPage(
+    
+    # App title ----
+    titlePanel("Gapminder Data Visualization using Shiny and Plotly"),
+    
+    # Sidebar layout with input and output definitions ----
+    sidebarLayout(
+        
+        # Sidebar panel for inputs ----
+        sidebarPanel(
+            
+            # Input: Select the random distribution type ----
+            textInput("title", "Title", "GDP vs life exp"),
+            numericInput("size", "Point size", 1, 1),
+            checkboxInput("fit", "Add line of best fit", FALSE),
+            colourInput("color", "Point color", value = "blue"),
+            
+            
+            selectInput("continent", "Continent",
+                        choices = c("All", levels(gapminder$continent))),
+            
+            sliderInput(inputId = "life", label = "Life expectancy",
+                        min = 0, max = 120,
+                        value = c(30, 50)),
+            downloadButton("download_data")
+            
+            
+        ),
+        
+        # Main panel for displaying outputs ----
+        mainPanel(
+            
+            # Output: Tabset w/ plot, summary, and table ----
+            tabsetPanel(type = "tabs",
+                        
+                        tabPanel("Plot", withLoader(plotlyOutput("plot")) ),
+                        tabPanel("Table", withLoader(DT::dataTableOutput("table")))
+                        
+                        
+            )
+            
+        )
+    )
+)
+
+
+
+## Server Code
+
+{r}
+library(plotly)
+library(colourpicker)
+library(ggplot2)
+library(gapminder)
+library(shinycustomloader)
+library(DT)
+
+server <- function(input, output) {
+    filtered_data <- reactive({
+        data <- gapminder
+        data <- subset(
+            data,
+            lifeExp >= input$life[1] & lifeExp <= input$life[2]
+        )
+        if (input$continent != "All") {
+            data <- subset(
+                data,
+                continent == input$continent
+            )
+        }
+        data
+    })
+    
+    output$table <- DT::renderDataTable({
+        data <- filtered_data()
+        data
+    })
+    
+    output$download_data <- downloadHandler(
+        filename = function() {
+            paste("gapminder-data-", Sys.Date(), ".csv", sep="")
+        },
+        content = function(file) {
+            write.csv(filtered_data(), file)
+        }
+    )
+    
+    
+    output$plot <- renderPlotly({
+        
+        ggplotly({
+            data <- filtered_data()
+            
+            p <- ggplot(data, aes(gdpPercap, lifeExp)) +
+                geom_point(size = input$size, col = input$color) +
+                scale_x_log10() +
+                ggtitle(input$title) + 
+                
+                
+                if (input$fit) {
+                    p <- p + geom_smooth(method = "lm")
+                }
+            p
+        })
+    })
+}
