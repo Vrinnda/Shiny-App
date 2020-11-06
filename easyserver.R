@@ -10,37 +10,13 @@ library(DT)
 server <- function(input, output) {
     filtered_data <- reactive({
         data <- gapminder
-        data <- subset(
-            data,
-            lifeExp >= input$life[1] & lifeExp <= input$life[2]
-        )
-        if (input$continent != "All") {
-            data <- subset(
-                data,
-                continent == input$continent
-            )
-        }
-        data
-    })
-    
-    output$table <- DT::renderDataTable({
-        data <- filtered_data()
-        data
-    })
-    
-    output$download_data <- downloadHandler(
-        filename = function() {
-            paste("gapminder-data-", Sys.Date(), ".csv", sep="")
-        },
-        content = function(file) {
-            write.csv(filtered_data(), file)
-        }
+server <- function(input, output) {
     )
-    
-    
-    
+
+
+
     output$plot <- renderPlotly({
-        
+
         ggplotly({
             data <- filtered_data()
             
