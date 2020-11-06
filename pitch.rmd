@@ -12,7 +12,7 @@ The code for the same can be found in the next slides
 This graph plots GDP of a continent with life expectancy.
 
 ## Data Set
-I have used the "gapminder" dataset for the same
+They set used for my file is the "gapminder" 
 
 {r}
 library(plotly)
@@ -95,39 +95,18 @@ library(gapminder)
 library(shinycustomloader)
 library(DT)
 
+
+
 server <- function(input, output) {
     filtered_data <- reactive({
         data <- gapminder
-        data <- subset(
-            data,
-            lifeExp >= input$life[1] & lifeExp <= input$life[2]
-        )
-        if (input$continent != "All") {
-            data <- subset(
-                data,
-                continent == input$continent
-            )
-        }
-        data
-    })
-    
-    output$table <- DT::renderDataTable({
-        data <- filtered_data()
-        data
-    })
-    
-    output$download_data <- downloadHandler(
-        filename = function() {
-            paste("gapminder-data-", Sys.Date(), ".csv", sep="")
-        },
-        content = function(file) {
-            write.csv(filtered_data(), file)
-        }
+server <- function(input, output) {
     )
-    
-    
+
+
+
     output$plot <- renderPlotly({
-        
+
         ggplotly({
             data <- filtered_data()
             
